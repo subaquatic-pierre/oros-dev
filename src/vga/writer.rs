@@ -1,50 +1,10 @@
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub enum Color {
-    Black = 0,
-    Blue = 1,
-    Green = 2,
-    Cyan = 3,
-    Red = 4,
-    Magenta = 5,
-    Brown = 6,
-    LightGray = 7,
-    DarkGray = 8,
-    LightBlue = 9,
-    LightGreen = 10,
-    LightCyan = 11,
-    LightRed = 12,
-    Pink = 13,
-    Yellow = 14,
-    White = 15,
-}
+use core::fmt::{self,Result, Write};
+use spin::Mutex;
+use lazy_static::lazy_static;
+use volatile::Volatile;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(transparent)]
-struct ColorCode(u8);
-
-impl ColorCode {
-    fn new(foreground: Color, background: Color) -> ColorCode {
-        ColorCode((background as u8) << 4 | (foreground as u8))
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(C)]
-struct ScreenChar {
-    ascii_char: u8,
-    color_code: ColorCode,
-}
-
-const BUFFER_HEIGHT: usize = 25;
-const BUFFER_WIDTH: usize = 80;
-
-#[repr(transparent)]
-struct Buffer {
-    chars: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT],
-}
-
+use super::color::{ColorCode, Buffer,BUFFER_WIDTH,BUFFER_HEIGHT ,ScreenChar, Color};
+    
 pub struct Writer {
     col_pos: usize,
     color_code: ColorCode,
@@ -64,6 +24,7 @@ impl Writer {
         }
     }
 
+    // write ASCII byte to VGA buffer
     pub fn write_byte(&mut self, byte: u8) {
         // match on ASCII byte character
         match byte {
@@ -82,10 +43,10 @@ impl Writer {
                 let color_code = self.color_code;
 
                 // write byte to buffer
-                self.buffer.chars[row][col] = ScreenChar {
+                self.buffer.chars[row][col].write(ScreenChar {
                     ascii_char: byte,
                     color_code,
-                };
+                });
 
                 // advance col pos
                 self.col_pos += 1;
@@ -93,6 +54,7 @@ impl Writer {
         }
     }
 
+    // write string
     pub fn write_string(&mut self, string: &str) {
         for byte in string.bytes() {
             match byte {
@@ -104,15 +66,47 @@ impl Writer {
         }
     }
 
+    // move buffer up one line, loose the top most line
     fn new_line(&mut self) {
-        todo!()
+        for row in 1..BUFFER_HEIGHT {
+            for col in 0..BUFFER_WIDTH {
+                let char = self.buffer.chars[row][col].read();
+                self.buffer.chars[row - 1][col].write(char)
+            }
+        }
+
+        self.clear_row(BUFFER_HEIGHT - 1);
+        self.col_pos = 0;
+    }
+
+    fn clear_row(&mut self, row: usize) {
+        let space = ScreenChar {
+            ascii_char: b' ',
+            color_code: self.color_code,
+        };
+
+        for col in 0..BUFFER_WIDTH {
+            self.buffer.chars[row][col].write(space);
+        }
+    }
+
+}
+
+// implement Write for writer to use write! macro
+impl Write for Writer {
+    fn write_str(&mut self, s: &str) -> Result {
+        self.write_string(s);
+        Ok(())
     }
 }
 
-pub fn print_string() {
-    let mut writer = Writer::new();
+// Create global Writer static type
+lazy_static! {
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer::new());
+}
 
-    writer.write_byte(b'H');
-    writer.write_string("ello, ");
-    writer.write_string(" WorlD!!!!!!")
+// private crate print function used in println! marco
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    WRITER.lock().write_fmt(args).unwrap();
 }

@@ -40,6 +40,12 @@ pub extern "C" fn _start() -> ! {
 
     x86_64::instructions::interrupts::int3();
 
+    // trigger triple fault
+
+    unsafe {
+        *(0xdeadbeef as *mut &str) = "Triple fault";
+    }
+
     #[cfg(test)]
     test_main();
 

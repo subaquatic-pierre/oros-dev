@@ -2,6 +2,8 @@ use lazy_static::lazy_static;
 use spin::Mutex;
 use uart_16550::SerialPort;
 
+use super::num::PortNumber;
+
 lazy_static! {
     pub static ref SERIAL1: Mutex<SerialPort> = {
         let mut serial_port = unsafe { SerialPort::new(0x3f8) };
@@ -21,7 +23,7 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
     use x86_64::instructions::port::Port;
 
     unsafe {
-        let mut port = Port::new(0xf4);
+        let mut port = Port::new(PortNumber::QemuDebugExit.into());
         port.write(exit_code as u32);
     }
 }

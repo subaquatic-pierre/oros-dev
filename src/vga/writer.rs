@@ -1,10 +1,9 @@
-use core::fmt::{self,Result, Write};
-use spin::Mutex;
+use core::fmt::{self, Result, Write};
 use lazy_static::lazy_static;
-use volatile::Volatile;
+use spin::Mutex;
 
-use super::color::{ColorCode, Buffer,BUFFER_WIDTH,BUFFER_HEIGHT ,ScreenChar, Color};
-    
+use super::color::{Buffer, Color, ColorCode, ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH};
+
 pub struct Writer {
     col_pos: usize,
     color_code: ColorCode,
@@ -89,7 +88,6 @@ impl Writer {
             self.buffer.chars[row][col].write(space);
         }
     }
-
 }
 
 // implement Write for writer to use write! macro
@@ -109,4 +107,34 @@ lazy_static! {
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        println,
+        vga::{color::BUFFER_HEIGHT, writer::WRITER},
+    };
+
+    #[test_case]
+    fn test_println_simple() {
+        println!("This is a simple test {},", "!")
+    }
+
+    #[test_case]
+    fn test_println_multiple() {
+        for _ in 0..100 {
+            println!("Printing many times to the screen");
+        }
+    }
+
+    #[test_case]
+    fn test_println_buffer() {
+        let s = "This is the string to be printed";
+        println!("{}", s);
+        for (col_i, string_char) in s.chars().enumerate() {
+            let buffer_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][col_i].read();
+            assert_eq!(string_char as u8, buffer_char.ascii_char);
+        }
+    }
 }

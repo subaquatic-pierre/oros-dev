@@ -1,6 +1,7 @@
 use core::fmt::{self, Result, Write};
 use lazy_static::lazy_static;
 use spin::Mutex;
+use x86_64::instructions::interrupts;
 
 use super::color::{Buffer, Color, ColorCode, ScreenChar, BUFFER_HEIGHT, BUFFER_WIDTH};
 
@@ -11,6 +12,7 @@ pub struct Writer {
 }
 
 impl Writer {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
             col_pos: 0,
@@ -106,7 +108,9 @@ lazy_static! {
 // private crate print function used in println! marco
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-    WRITER.lock().write_fmt(args).unwrap();
+    interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    })
 }
 
 #[cfg(test)]
@@ -130,11 +134,17 @@ mod test {
 
     #[test_case]
     fn test_println_buffer() {
-        let s = "This is the string to be printed";
-        println!("{}", s);
-        for (col_i, string_char) in s.chars().enumerate() {
-            let buffer_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][col_i].read();
-            assert_eq!(string_char as u8, buffer_char.ascii_char);
-        }
+        use core::fmt::Write;
+        use x86_64::instructions::interrupts;
+
+        let s = "Some test string that fits on a single line";
+        interrupts::without_interrupts(|| {
+            let mut writer = WRITER.lock();
+            writeln!(writer, "\n{}", s).expect("writeln failed");
+            for (i, c) in s.chars().enumerate() {
+                let screen_char = writer.buffer.chars[BUFFER_HEIGHT - 2][i].read();
+                assert_eq!(char::from(screen_char.ascii_char), c);
+            }
+        });
     }
 }

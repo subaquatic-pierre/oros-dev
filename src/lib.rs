@@ -27,11 +27,20 @@ pub mod vga;
 pub extern "C" fn _start() -> ! {
     init::init();
     test_main();
-    loop {}
+
+    hlt_loop();
 }
 
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    test_utils::panic_handler(info)
+    test_utils::panic_handler(info);
+    hlt_loop();
+}
+
+pub fn hlt_loop() -> ! {
+    use x86_64::instructions;
+    loop {
+        instructions::hlt();
+    }
 }

@@ -13,6 +13,8 @@
 
 use core::panic::PanicInfo;
 
+use oros::hlt_loop;
+
 mod init;
 mod interrupts;
 mod port;
@@ -23,6 +25,7 @@ mod vga;
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     test_utils::panic_handler(info);
+    oros::hlt_loop()
 }
 
 /// This function is called on panic.
@@ -30,7 +33,7 @@ fn panic(info: &PanicInfo) -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{info}");
-    loop {}
+    oros::hlt_loop();
 }
 
 #[no_mangle] // don't mangle the name of this function
@@ -50,5 +53,5 @@ pub extern "C" fn _start() -> ! {
     #[cfg(test)]
     test_main();
 
-    loop {}
+    oros::hlt_loop()
 }

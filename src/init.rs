@@ -1,3 +1,5 @@
+use x86_64::instructions::interrupts::enable;
+
 use crate::interrupts;
 
 pub fn init() {
@@ -5,4 +7,5 @@ pub fn init() {
     interrupts::gdt::init();
 
     unsafe { interrupts::pic::PICS.lock().initialize() };
+    x86_64::instructions::interrupts::enable();
 }

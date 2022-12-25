@@ -38,18 +38,17 @@ pub extern "C" fn _start() -> ! {
     init::init();
     println!("The NEWEST OS there is {}", "!");
 
-    x86_64::instructions::interrupts::int3();
+    // x86_64::instructions::interrupts::int3();
 
     // trigger triple fault
+    println!("It did not crash");
 
-    unsafe {
-        *(0xdeadbeef as *mut &str) = "Triple fault";
-    }
+    // unsafe {
+    //     *(0xdeadbeef as *mut &str) = "Triple fault";
+    // }
 
     #[cfg(test)]
     test_main();
-
-    println!("It did not crash");
 
     loop {}
 }

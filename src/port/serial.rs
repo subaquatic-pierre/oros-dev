@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use spin::Mutex;
 use uart_16550::SerialPort;
 
-use super::num::PortNumber;
+use super::{num::PortNumber, Port};
 
 lazy_static! {
     pub static ref SERIAL1: Mutex<SerialPort> = {

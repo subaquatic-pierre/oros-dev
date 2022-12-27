@@ -1,3 +1,7 @@
+//! Main entry point for oros kernel
+//! operating system kernel developed in Rust
+
+// TODO: Remove warnings from code
 #![allow(dead_code)]
 #![allow(clippy::empty_loop)]
 #![allow(unused_imports)]
@@ -13,32 +17,29 @@
 
 use core::panic::PanicInfo;
 
-use oros::hlt_loop;
+use bootloader::{entry_point, BootInfo};
 use x86_64::registers::control::Cr3;
 
-mod init;
-mod interrupts;
-mod port;
-mod test_utils;
-mod vga;
+use oros::{hlt_loop, init, println, test_utils};
 
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     test_utils::panic_handler(info);
-    oros::hlt_loop()
 }
 
-/// This function is called on panic.
+/// This function is called on system panic.
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{info}");
-    oros::hlt_loop();
+    hlt_loop();
 }
 
-#[no_mangle] // don't mangle the name of this function
-pub extern "C" fn _start() -> ! {
+entry_point!(kernel_main);
+
+/// Main entry point function
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
     init::init();
     println!("The NEWEST OS there is {}", "!");
 
@@ -70,5 +71,5 @@ pub extern "C" fn _start() -> ! {
     #[cfg(test)]
     test_main();
 
-    oros::hlt_loop()
+    hlt_loop()
 }

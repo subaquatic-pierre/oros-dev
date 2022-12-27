@@ -6,19 +6,17 @@
 
 use core::panic::PanicInfo;
 
-use oros::println;
+use oros::{hlt_loop, println};
 
 #[no_mangle] // don't mangle the name of this function
 pub extern "C" fn _start() -> ! {
     test_main();
-
-    loop {}
+    hlt_loop();
 }
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     oros::test_utils::panic_handler(info);
-    loop {}
 }
 
 #[test_case]

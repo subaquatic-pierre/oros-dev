@@ -1,6 +1,6 @@
 use core::panic::PanicInfo;
 
-use crate::{println, serial_print, serial_println};
+use crate::{hlt_loop, println, serial_print, serial_println};
 
 /// Testable trait used for all test cases
 /// implements printing functionality for any test case
@@ -38,5 +38,5 @@ pub fn panic_handler(info: &PanicInfo) -> ! {
     println!("{info}");
     exit_qemu(QemuExitCode::Failed);
 
-    loop {}
+    hlt_loop();
 }

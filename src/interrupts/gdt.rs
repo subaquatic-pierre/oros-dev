@@ -13,7 +13,7 @@ use x86_64::{structures::tss::TaskStateSegment, VirtAddr};
 
 pub const DOUBLE_FAULT_IST_INDEX: u16 = 0;
 
-/// selector struct used to set CS segment and TSS segment on  CPU
+/// selector struct used to set CS (Code Segment) segment and TSS (Task State Segment) segment on  CPU
 struct Selectors {
     cs_selector: SegmentSelector,
     tss_selector: SegmentSelector,
@@ -47,6 +47,10 @@ lazy_static! {
     };
 }
 
+/// The Interrupt Stack Table (IST)
+/// Loads TSS (Task State Segment) and
+/// CS (Code Segment regsiter) using the
+/// GDT (Global Descriptor Table)
 pub fn init() {
     GDT.0.load();
 

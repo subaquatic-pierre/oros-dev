@@ -15,11 +15,18 @@
 #![test_runner(crate::test_utils::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+// extern alloc crate to be compiled with binary
+extern crate alloc;
+
 use core::panic::PanicInfo;
 
+use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
 use bootloader::{entry_point, BootInfo};
 use x86_64::registers::control::Cr3;
+use x86_64::structures::paging::{Page, PageTable, Size4KiB, Translate};
+use x86_64::VirtAddr;
 
+use oros::{allocator, memory};
 use oros::{hlt_loop, init, println, test_utils};
 
 #[cfg(test)]
@@ -40,36 +47,63 @@ entry_point!(kernel_main);
 
 /// Main entry point function
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
+    // get the physical memory offset
+
+    // initialize RAM
     init::init();
+
+    // print the os is working
     println!("The NEWEST OS there is {}", "!");
 
-    // x86_64::instructions::interrupts::int3();
+    // TODO:
+    // Move allocator init logic into
+    // main init method
+    let phys_mem_offset = boot_info.physical_memory_offset;
+    let phys_mem_offset_addr = VirtAddr::new(phys_mem_offset);
 
-    // trigger triple fault
-    println!("It did not crash");
+    // initialize mapper
+    let mut mapper = unsafe { memory::init(phys_mem_offset_addr) };
+    // allocator
+    let mut frame_allocator =
+        unsafe { memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
 
-    // trigger page fault
-    let ptr: *mut u32 = 0x2074ee as *mut u32;
-    println!("Able to read from addr 0x2074ee");
-    // unsafe {
-    //     *ptr = 42;
-    // }
-    // println!("Unable to write to that address");
+    // heap allocatotion init
+    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
 
-    // unsafe {
-    //     *(0xdeadbeef as *mut &str) = "Triple fault";
-    // }
+    // create page to test VGA buffer
+    let page: Page<Size4KiB> = Page::containing_address(VirtAddr::new(0xb8000));
+    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    unsafe { page_ptr.offset(400).write_volatile(0xf021_f077_f065_f04e) };
 
-    // read CPU page table regsiters
-    let (level_4_page_table, _) = Cr3::read();
-    println!("Level 4 page table at: {:?}", level_4_page_table);
+    // test allocator
+    // perfom main logic
+    let x = Box::new(41);
+    let x_ptr: *const u64 = &*x;
+    println!("The coolest box value: {x} at address {:?}", x_ptr);
+
+    // create vector
+    let mut vec = Vec::new();
+    for i in 0..500 {
+        vec.push(i)
+    }
+    println!("The vector address is {:p}", vec.as_slice());
+
+    // create referrence counted vector -> will be freed when count reaches 0
+    let ref_count = Rc::new(vec![1, 2, 3]);
+    let cloned_ref = ref_count.clone();
     println!(
-        "Level 4 page table at: {:?}",
-        level_4_page_table.start_address()
+        "current referrence counr is {}",
+        Rc::strong_count(&cloned_ref)
     );
+    core::mem::drop(ref_count);
+    println!("reference count is {} now ", Rc::strong_count(&cloned_ref));
 
+    println!("It did not crash!");
+
+    // run tests if 'cargo test'
     #[cfg(test)]
     test_main();
 
+    // start system loop, idle CPU if no current instructions
     hlt_loop()
 }

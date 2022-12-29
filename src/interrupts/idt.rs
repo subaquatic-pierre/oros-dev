@@ -36,6 +36,9 @@ lazy_static! {
     };
 }
 
+/// Interrupt descriptor table
+/// used to create index of interrupt codes and register handlers
+/// sets PIC (Programable Interrupt Controllers)
 pub fn init_idt() {
     IDT.load();
 }

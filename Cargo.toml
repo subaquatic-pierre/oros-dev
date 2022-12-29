@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bootloader = "0.9.23"
+bootloader = {version="0.9.23", features=["map_physical_memory"]}
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 volatile = "0.2.6"
 spin = "0.5.2"
@@ -14,6 +14,7 @@ x86_64 = "0.14.2"
 uart_16550 = "0.2.0"
 pic8259 = "0.10.1"
 pc-keyboard = "0.5.0"
+linked_list_allocator = "0.9.0"
 
 [package.metadata.bootimage]
 test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial", "stdio", "-display", "none"]

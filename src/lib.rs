@@ -33,12 +33,12 @@ pub mod port;
 pub mod test_utils;
 pub mod vga;
 
-/// main entry point used when cargo test
+// main entry point used when cargo test
 #[cfg(test)]
 entry_point!(test_kernel_main);
 
-/// Only run lib test kernel on cargo test
-/// Entry point for `cargo test`
+// Only run lib test kernel on cargo test
+// Entry point for `cargo test`
 #[cfg(test)]
 fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
     // initialize kernel

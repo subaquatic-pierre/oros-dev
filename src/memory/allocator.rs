@@ -9,6 +9,8 @@ use x86_64::{
     VirtAddr,
 };
 
+use super::bump::BumpAllocator;
+
 #[global_allocator]
 pub static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
@@ -28,6 +30,10 @@ unsafe impl GlobalAlloc for Dummy {
     }
 }
 
+/// Create spin::Mutex wrapper for allocator
+///
+/// Used for interior mutability of the GlobalAllocator
+/// trait
 pub struct Locked<T> {
     inner: spin::Mutex<T>,
 }
@@ -42,4 +48,11 @@ impl<T> Locked<T> {
     pub fn lock(&self) -> spin::MutexGuard<T> {
         self.inner.lock()
     }
+}
+
+/// Align `addr` upwards to alignment `align`
+///
+/// Requires that `align` is power of two
+pub fn align_up(addr: usize, align: usize) -> usize {
+    (addr + align - 1) & !(align - 1)
 }

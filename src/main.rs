@@ -45,7 +45,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 entry_point!(kernel_main);
 
-/// Main entry point function
+// Main entry point function
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
     // get the physical memory offset
 

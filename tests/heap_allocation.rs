@@ -8,12 +8,9 @@ extern crate alloc;
 
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
-use x86_64::VirtAddr;
 
-use oros::allocator;
 use oros::hlt_loop;
 use oros::init;
-use oros::memory;
 
 entry_point!(test_kernel_main);
 
@@ -21,19 +18,7 @@ fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
     // get the physical memory offset
 
     // initialize RAM
-    init::init();
-
-    let phys_mem_offset = boot_info.physical_memory_offset;
-    let phys_mem_offset_addr = VirtAddr::new(phys_mem_offset);
-
-    // initialize mapper
-    let mut mapper = unsafe { memory::init(phys_mem_offset_addr) };
-    // allocator
-    let mut frame_allocator =
-        unsafe { memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
-
-    // heap allocatotion init
-    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
+    init::init(boot_info);
 
     test_main();
 
@@ -49,7 +34,7 @@ fn panic(info: &PanicInfo) -> ! {
 mod tests {
     use super::*;
     use alloc::{boxed::Box, vec::Vec};
-    use oros::allocator::HEAP_SIZE;
+    use oros::memory::allocator::HEAP_SIZE;
 
     #[test_case]
     fn large_vec() {

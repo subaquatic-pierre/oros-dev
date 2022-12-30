@@ -26,7 +26,7 @@ use x86_64::registers::control::Cr3;
 use x86_64::structures::paging::{Page, PageTable, Size4KiB, Translate};
 use x86_64::VirtAddr;
 
-use oros::{allocator, memory};
+use oros::memory::{self, allocator, frame};
 use oros::{hlt_loop, init, println, test_utils};
 
 #[cfg(test)]
@@ -50,7 +50,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     // get the physical memory offset
 
     // initialize RAM
-    init::init();
+    init::init(boot_info);
 
     // print the os is working
     println!("The NEWEST OS there is {}", "!");
@@ -58,17 +58,6 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     // TODO:
     // Move allocator init logic into
     // main init method
-    let phys_mem_offset = boot_info.physical_memory_offset;
-    let phys_mem_offset_addr = VirtAddr::new(phys_mem_offset);
-
-    // initialize mapper
-    let mut mapper = unsafe { memory::init(phys_mem_offset_addr) };
-    // allocator
-    let mut frame_allocator =
-        unsafe { memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
-
-    // heap allocatotion init
-    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
 
     // create page to test VGA buffer
     let page: Page<Size4KiB> = Page::containing_address(VirtAddr::new(0xb8000));

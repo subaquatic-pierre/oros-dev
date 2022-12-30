@@ -47,27 +47,3 @@ unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
         frame
     }
 }
-/// Initialize new OffsetPageTable
-/// # Safety
-///
-/// Need to be unsafe
-pub unsafe fn init(phys_mem_offset: VirtAddr) -> OffsetPageTable<'static> {
-    let lvl_4_table = active_lvl_4_table(phys_mem_offset);
-    OffsetPageTable::new(lvl_4_table, phys_mem_offset)
-}
-
-/// Returns mutable address to active level 4 table
-/// # Safety
-///
-/// raw pointers need usafe actions
-unsafe fn active_lvl_4_table(physical_mem_offset: VirtAddr) -> &'static mut PageTable {
-    use x86_64::registers::control::Cr3;
-
-    let (lvl_4_table_frame, _) = Cr3::read();
-
-    let phys = lvl_4_table_frame.start_address();
-    let virt_addr = physical_mem_offset + phys.as_u64();
-    let page_table_ptr: *mut PageTable = virt_addr.as_mut_ptr();
-
-    &mut *page_table_ptr //unsafe
-}

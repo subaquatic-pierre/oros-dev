@@ -1,4 +1,5 @@
 use alloc::alloc::{GlobalAlloc, Layout};
+use bootloader::bootinfo::{MemoryMap, MemoryRegionType};
 use core::ptr::null_mut;
 use linked_list_allocator::LockedHeap;
 use x86_64::{
@@ -7,13 +8,43 @@ use x86_64::{
     },
     VirtAddr,
 };
+use x86_64::{
+    structures::paging::{OffsetPageTable, PageTable, PhysFrame},
+    PhysAddr,
+};
 
-#[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+pub mod allocator;
+pub mod bump;
+pub mod fixed;
+pub mod frame;
+pub mod linked_list;
 
-// define heap memeory location
-pub const HEAP_START: usize = 0x_4444_4444_0000;
-pub const HEAP_SIZE: usize = 100 * 1024; // 100KiB
+use allocator::{ALLOCATOR, HEAP_SIZE, HEAP_START};
+
+/// Initialize new OffsetPageTable
+/// # Safety
+///
+/// Need to be unsafe
+pub unsafe fn init(phys_mem_offset: VirtAddr) -> OffsetPageTable<'static> {
+    let lvl_4_table = active_lvl_4_table(phys_mem_offset);
+    OffsetPageTable::new(lvl_4_table, phys_mem_offset)
+}
+
+/// Returns mutable address to active level 4 table
+/// # Safety
+///
+/// raw pointers need usafe actions
+unsafe fn active_lvl_4_table(physical_mem_offset: VirtAddr) -> &'static mut PageTable {
+    use x86_64::registers::control::Cr3;
+
+    let (lvl_4_table_frame, _) = Cr3::read();
+
+    let phys = lvl_4_table_frame.start_address();
+    let virt_addr = physical_mem_offset + phys.as_u64();
+    let page_table_ptr: *mut PageTable = virt_addr.as_mut_ptr();
+
+    &mut *page_table_ptr //unsafe
+}
 
 /// Create allocation frames for heap memory
 pub fn init_heap(
@@ -50,16 +81,4 @@ pub fn init_heap(
     }
 
     Ok(())
-}
-
-pub struct Dummy;
-
-unsafe impl GlobalAlloc for Dummy {
-    unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
-        null_mut()
-    }
-
-    unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
-        panic!("dealloc should never be called")
-    }
 }

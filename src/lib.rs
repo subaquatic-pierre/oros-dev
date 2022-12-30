@@ -26,7 +26,6 @@ use core::panic::PanicInfo;
 use bootloader::{entry_point, BootInfo};
 
 // import kernel modules
-pub mod allocator;
 pub mod init;
 pub mod interrupts;
 pub mod memory;
@@ -43,7 +42,7 @@ entry_point!(test_kernel_main);
 #[cfg(test)]
 fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
     // initialize kernel
-    init::init();
+    init::init(boot_info);
 
     // start test runner
     test_main();

@@ -57,6 +57,18 @@ mod tests {
     }
 
     #[test_case]
+    fn many_boxes_long_lived() {
+        let long_lived = Box::new(1);
+
+        for i in 0..HEAP_SIZE {
+            let x = Box::new(i + 1);
+            assert_eq!(i + 1, *x);
+        }
+
+        assert_eq!(1, *long_lived);
+    }
+
+    #[test_case]
     fn simple_allocation() {
         let heap_val_1 = Box::new(41);
         let heap_val_2 = Box::new(7);

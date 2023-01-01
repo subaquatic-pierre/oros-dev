@@ -9,8 +9,11 @@
 #![no_std] // don't link the Rust standard library
 #![no_main] // disable all Rust-level entry points
 
-// test attributes
+// unstable features
 #![feature(abi_x86_interrupt)]
+#![feature(alloc_error_handler)]
+#![feature(const_mut_refs)]
+// test attributes
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_utils::test_runner)]
 #![reexport_test_harness_main = "test_main"]

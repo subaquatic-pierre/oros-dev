@@ -2,6 +2,7 @@ use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr;
 
 use super::allocator::{align_up, Locked};
+use crate::serial_println;
 
 unsafe impl GlobalAlloc for Locked<BumpAllocator> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
@@ -58,6 +59,8 @@ impl BumpAllocator {
     /// Marked as unsafe because the caller must ensure the given
     /// memory range is unused. Method should only be called once.
     pub unsafe fn init(&mut self, heap_start: usize, heap_size: usize) {
+        serial_println!("Initializing BumpAllocator heap allocator");
+
         self.heap_start = heap_start;
         self.heap_end = heap_start + heap_size;
         self.next = heap_start;

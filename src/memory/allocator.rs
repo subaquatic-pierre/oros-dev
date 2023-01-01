@@ -9,10 +9,12 @@ use x86_64::{
     VirtAddr,
 };
 
-use super::bump::BumpAllocator;
+use super::{bump::BumpAllocator, fixed::FixedSizeAllocator, linked_list::LinkedListAllocator};
 
 #[global_allocator]
-pub static ALLOCATOR: LockedHeap = LockedHeap::empty();
+// pub static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
+// pub static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+pub static ALLOCATOR: Locked<FixedSizeAllocator> = Locked::new(FixedSizeAllocator::new());
 
 // define heap memeory location
 pub const HEAP_START: usize = 0x_4444_4444_0000;

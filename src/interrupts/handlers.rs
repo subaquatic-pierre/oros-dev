@@ -40,29 +40,14 @@ pub extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptSta
 
 /// Keyboard interrupt handler
 pub extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStackFrame) {
-    use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
-    use spin::Mutex;
     use x86_64::instructions::port::Port;
 
-    lazy_static! {
-        static ref KBD: Mutex<Keyboard<layouts::Us104Key, ScancodeSet1>> = Mutex::new(
-            Keyboard::new(layouts::Us104Key, ScancodeSet1, HandleControl::Ignore)
-        );
-    }
-
-    let mut kbd = KBD.lock();
     let mut port = Port::new(PortNumber::Keyboard.into());
-
     let scancode: u8 = unsafe { port.read() };
 
-    if let Ok(Some(key_event)) = kbd.add_byte(scancode) {
-        if let Some(key) = kbd.process_keyevent(key_event) {
-            match key {
-                DecodedKey::Unicode(character) => print!("{}", character),
-                DecodedKey::RawKey(key) => print!("{:?}", key),
-            }
-        }
-    }
+    // use executor to add scancode to task queue
+    // used for concurrency
+    crate::task::keyboard::add_scancode(scancode);
 
     unsafe {
         PICS.lock()

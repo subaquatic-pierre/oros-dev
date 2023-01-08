@@ -30,6 +30,7 @@ use x86_64::structures::paging::{Page, PageTable, Size4KiB, Translate};
 use x86_64::VirtAddr;
 
 use oros::memory::{self, allocator, frame};
+use oros::task::{executor::Executor, keyboard, Task};
 use oros::{hlt_loop, init, println, test_utils};
 
 #[cfg(test)]
@@ -67,28 +68,10 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
     unsafe { page_ptr.offset(400).write_volatile(0xf021_f077_f065_f04e) };
 
-    // test allocator
-    // perfom main logic
-    let x = Box::new(41);
-    let x_ptr: *const u64 = &*x;
-    println!("The coolest box value: {x} at address {:?}", x_ptr);
-
-    // create vector
-    let mut vec = Vec::new();
-    for i in 0..500 {
-        vec.push(i)
-    }
-    println!("The vector address is {:p}", vec.as_slice());
-
-    // create referrence counted vector -> will be freed when count reaches 0
-    let ref_count = Rc::new(vec![1, 2, 3]);
-    let cloned_ref = ref_count.clone();
-    println!(
-        "current referrence counr is {}",
-        Rc::strong_count(&cloned_ref)
-    );
-    core::mem::drop(ref_count);
-    println!("reference count is {} now ", Rc::strong_count(&cloned_ref));
+    let mut executor = Executor::new();
+    executor.spawn(Task::new(example_task()));
+    executor.spawn(Task::new(keyboard::print_key_presses()));
+    executor.run();
 
     println!("It did not crash!");
 
@@ -98,4 +81,13 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     // start system loop, idle CPU if no current instructions
     hlt_loop()
+}
+
+async fn example_number() -> u32 {
+    42
+}
+
+async fn example_task() {
+    let number = example_number().await;
+    println!("{number}");
 }

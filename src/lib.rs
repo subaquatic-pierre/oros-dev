@@ -8,6 +8,9 @@
 #![allow(clippy::empty_loop)]
 #![allow(unused_imports)]
 #![allow(unused_variables)]
+#![allow(clippy::new_without_default)]
+#![allow(clippy::new_ret_no_self)]
+#![feature(trait_alias)]
 #![no_std] // don't link the Rust standard library
 
 // unstable features
@@ -31,6 +34,7 @@ pub mod init;
 pub mod interrupts;
 pub mod memory;
 pub mod port;
+pub mod task;
 pub mod test_utils;
 pub mod vga;
 

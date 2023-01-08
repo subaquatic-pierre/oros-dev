@@ -21,7 +21,8 @@ impl Executor {
 
     pub fn run(&mut self) -> ! {
         loop {
-            self.run_ready_tasks()
+            self.run_ready_tasks();
+            self.sleep_if_idle();
         }
     }
 

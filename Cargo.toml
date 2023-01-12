@@ -6,7 +6,7 @@ version = "0.1.0"
 
 [build-dependencies]
 bootloader = "0.11"
-test-kernel = { path = "kernel", artifact = "bin", target = "x86_64-unknown-none" }
+oros-kernel = { path = "kernel", artifact = "bin", target = "x86_64-unknown-none" }
 
 [dependencies]
 # used for UEFI booting in QEMU

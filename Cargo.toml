@@ -1,5 +1,3 @@
-# Cargo.toml
-
 [package]
 name = "os"         # or any other name
 version = "0.1.0"
@@ -7,6 +5,7 @@ version = "0.1.0"
 [build-dependencies]
 bootloader = "0.11"
 oros-kernel = { path = "kernel", artifact = "bin", target = "x86_64-unknown-none" }
+
 
 [dependencies]
 # used for UEFI booting in QEMU

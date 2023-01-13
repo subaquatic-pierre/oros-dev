@@ -3,10 +3,8 @@ name = "oros-kernel"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-bootloader = {version="0.11.0"}
+bootloader_api = "0.11"
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 volatile = "0.2.6"
 spin = "0.5.2"
@@ -17,12 +15,7 @@ pc-keyboard = "0.5.0"
 linked_list_allocator = "0.9.0"
 crossbeam-queue = { version = "0.2.1", default-features = false, features = ["alloc"] }
 conquer-once = { version = "0.2.0", default-features = false }
-futures-util = { version = "0.3.4", default-features = false, feaures = ["alloc"] }
-
-[package.metadata.bootimage]
-test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial", "stdio", "-display", "none"]
-test-success-exit-code = 33
-test-timeout = 120
+futures-util = { version = "0.3.4", default-features = false, features = ["alloc"] }
 
 [[test]]
 name = "should_panic"

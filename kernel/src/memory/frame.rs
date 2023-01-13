@@ -1,4 +1,4 @@
-use bootloader::bootinfo::{MemoryMap, MemoryRegionType};
+use bootloader_api::info::{MemoryRegionKind, MemoryRegions};
 use x86_64::{
     structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB},
     PhysAddr, VirtAddr,
@@ -6,7 +6,7 @@ use x86_64::{
 
 /// A frame allocator that returns usable frames from bootloaders memory map
 pub struct BootInfoFrameAllocator {
-    mem_map: &'static MemoryMap,
+    mem_map: &'static MemoryRegions,
     next: usize,
 }
 
@@ -17,17 +17,17 @@ impl BootInfoFrameAllocator {
     ///
     /// Has to be unsafe
     /// The caller must ensure that passed memory map is valid
-    pub unsafe fn init(mem_map: &'static MemoryMap) -> Self {
+    pub unsafe fn init(mem_map: &'static MemoryRegions) -> Self {
         Self { mem_map, next: 0 }
     }
 
     fn usable_frames(&self) -> impl Iterator<Item = PhysFrame> {
         //get usable regions from the memory map
         let regions = self.mem_map.iter();
-        let usable_regions = regions.filter(|r| r.region_type == MemoryRegionType::Usable);
+        let usable_regions = regions.filter(|r| r.kind == MemoryRegionKind::Usable);
 
         // map each region to its address range
-        let addr_ranges = usable_regions.map(|r| r.range.start_addr()..r.range.end_addr());
+        let addr_ranges = usable_regions.map(|r| r.start..r.end);
 
         // transform to an iter of frame start addrs
         let frame_addrs = addr_ranges.flat_map(|r| r.step_by(4096));

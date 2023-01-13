@@ -27,25 +27,32 @@ extern crate alloc;
 
 use core::panic::PanicInfo;
 
-use bootloader::{entry_point, BootInfo};
+use bootloader_api::config::{BootloaderConfig, Mapping};
+use bootloader_api::{entry_point, BootInfo};
 
 // import kernel modules
 pub mod init;
 pub mod interrupts;
 pub mod memory;
 pub mod port;
+pub mod screen;
 pub mod task;
 pub mod test_utils;
-pub mod vga;
 
 // main entry point used when cargo test
 #[cfg(test)]
-entry_point!(test_kernel_main);
+entry_point!(test_kernel_main, &BOOTLOADER_CONFIG);
+
+pub static BOOTLOADER_CONFIG: BootloaderConfig = {
+    let mut config = BootloaderConfig::new_default();
+    config.mappings.physical_memory = Some(Mapping::Dynamic);
+    config
+};
 
 // Only run lib test kernel on cargo test
 // Entry point for `cargo test`
 #[cfg(test)]
-fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
+fn test_kernel_main(boot_info: &'static mut BootInfo) -> ! {
     // initialize kernel
     init::init(boot_info);
 

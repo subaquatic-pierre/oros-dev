@@ -1,5 +1,6 @@
 use alloc::alloc::{GlobalAlloc, Layout};
-use bootloader::bootinfo::{MemoryMap, MemoryRegionType};
+use bootloader_api::info::{MemoryRegionKind, MemoryRegions};
+
 use core::ptr::null_mut;
 use linked_list_allocator::LockedHeap;
 use x86_64::{

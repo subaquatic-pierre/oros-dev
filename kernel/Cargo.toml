@@ -6,16 +6,33 @@ edition = "2021"
 [dependencies]
 bootloader_api = "0.11"
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
-volatile = "0.2.6"
-spin = "0.5.2"
+
+# X86_64 Architecture
 x86_64 = "0.14.2"
 uart_16550 = "0.2.0"
 pic8259 = "0.10.1"
-pc-keyboard = "0.5.0"
+
+# Memory
+volatile = "0.2.6"
 linked_list_allocator = "0.9.0"
+
+# Async
+spin = "0.5.2"
 crossbeam-queue = { version = "0.2.1", default-features = false, features = ["alloc"] }
 conquer-once = { version = "0.2.0", default-features = false }
 futures-util = { version = "0.3.4", default-features = false, features = ["alloc"] }
+
+# Keyboard
+pc-keyboard = "0.5.0"
+
+# Screen deps
+noto-sans-mono-bitmap = { version = "0.2.0", default-features = false, features = [
+    "regular",
+    "size_16",
+    "unicode-basic-latin",
+    # required for the fallback char '�'
+    "unicode-specials",
+] }
 
 [[test]]
 name = "should_panic"

@@ -1,6 +1,5 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::{ops::DerefMut, ptr::null_mut};
-use lazy_static::__Deref;
 use linked_list_allocator::LockedHeap;
 use x86_64::{
     structures::paging::{

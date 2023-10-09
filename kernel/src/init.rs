@@ -1,7 +1,8 @@
-use bootloader_api::{entry_point, BootInfo};
+use bootloader_api::BootInfo;
 use x86_64::instructions;
 use x86_64::VirtAddr;
 
+use crate::screen;
 use crate::{
     interrupts,
     memory::{self, allocator, frame},
@@ -16,11 +17,7 @@ pub fn init(boot_info: &'static mut BootInfo) {
     // enable interrupts
     instructions::interrupts::enable();
 
-    // let physical_offset = match boot_info.physical_memory_offset.into_option() {
-    //     Some(num) => num,
-    //     None => 0,
-    // };
-
+    // set default memory offset to 0
     let phys_mem_offset_addr =
         VirtAddr::new(boot_info.physical_memory_offset.into_option().unwrap_or(0));
 
@@ -33,5 +30,5 @@ pub fn init(boot_info: &'static mut BootInfo) {
     // heap allocatotion init
     memory::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
 
-    // initialize memory
+    // initialize memory'
 }
